@@ -1,0 +1,40 @@
+/* WorldBite AI Chef */
+.ai-chef-launcher{
+  position:fixed;right:22px;bottom:22px;z-index:9998;
+  border:1px solid rgba(244,234,217,.18);border-radius:999px;
+  padding:.85rem 1.15rem;background:var(--amber,#e0913f);color:var(--espresso-deep,#120c08);
+  font-family:'Sora',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;
+  box-shadow:0 12px 32px rgba(0,0,0,.32);transition:transform .2s,box-shadow .2s;
+}
+.ai-chef-launcher:hover{transform:translateY(-2px);box-shadow:0 16px 38px rgba(0,0,0,.4)}
+.ai-chef-panel{
+  position:fixed;right:22px;bottom:82px;z-index:9999;width:min(390px,calc(100vw - 28px));
+  color:var(--cream,#f4ead9);background:rgba(28,19,13,.97);
+  border:1px solid var(--line,rgba(244,234,217,.14));border-radius:18px;overflow:hidden;
+  box-shadow:0 24px 70px rgba(0,0,0,.5);backdrop-filter:blur(14px);
+  opacity:0;transform:translateY(12px) scale(.98);pointer-events:none;
+  transition:opacity .2s ease,transform .2s ease;
+}
+.ai-chef-panel.open{opacity:1;transform:none;pointer-events:auto}
+.ai-chef-head{display:flex;justify-content:space-between;align-items:flex-start;padding:1.1rem 1.15rem .75rem;border-bottom:1px solid var(--line)}
+.ai-chef-head h3{font-size:1.15rem;margin:0 0 .25rem}
+.ai-chef-head p{font-size:.72rem;color:var(--cream-dim);margin:0}
+.ai-chef-close{border:0;background:transparent;color:var(--cream-dim);font-size:1.5rem;cursor:pointer}
+.ai-chef-content{padding:1rem 1.15rem 1.2rem;text-align:center}
+.ai-chef-avatar{width:112px;height:112px;margin:.15rem auto .85rem;border-radius:50%;
+  background:radial-gradient(circle at 50% 30%,#4a2c1b,#120c08);display:grid;place-items:center;
+  border:1px solid rgba(224,145,63,.35);overflow:hidden}
+.ai-chef-avatar img{width:100%;height:100%;object-fit:cover}
+.ai-chef-fallback{font-size:3.2rem}
+.ai-chef-status{min-height:20px;color:var(--cream-dim);font-size:.78rem;margin-bottom:.65rem}
+.ai-chef-transcript{min-height:42px;padding:.65rem .8rem;margin-bottom:.8rem;border:1px solid var(--line);
+  border-radius:12px;text-align:left;color:var(--cream-dim);font-size:.76rem;line-height:1.5}
+.ai-chef-mic{width:62px;height:62px;border:0;border-radius:50%;background:var(--terracotta,#c1502e);
+  color:#fff;font-size:1.55rem;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.ai-chef-mic:hover{transform:scale(1.05)}
+.ai-chef-mic.active{box-shadow:0 0 0 10px rgba(193,80,46,.16);background:#b42318}
+.ai-chef-note{margin-top:.7rem;font-size:.65rem;color:rgba(244,234,217,.42)}
+@media(max-width:640px){
+  .ai-chef-launcher{right:14px;bottom:14px}
+  .ai-chef-panel{right:14px;bottom:72px}
+}

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorldBite — Travel the World, One Bite at a Time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  #scene-canvas{ position:absolute; top:0; left:0; width:100%; height:100%; z-index:1; }
+  .hero-wrap{ position:relative; min-height:100vh; overflow:hidden; }
+  .noise-overlay{
+    position:absolute; inset:0; z-index:2; pointer-events:none;
+    background-image: radial-gradient(circle at 20% 20%, rgba(224,145,63,0.06), transparent 45%),
+                       radial-gradient(circle at 80% 70%, rgba(193,80,46,0.08), transparent 50%);
+  }
+  .hero-content{
+    position:relative; z-index:3; min-height:calc(100vh - 74px);
+    display:flex; flex-direction:column; justify-content:center;
+    padding: 4vh 6vw;
+  }
+  .hero-eyebrow{ font-size:0.72rem; letter-spacing:0.28em; text-transform:uppercase; color:var(--gold); margin-bottom:1.4rem; opacity:0; animation: fadeUp 1s ease forwards 0.2s; }
+  .hero-content h1{ font-size:clamp(2.6rem,7vw,5.2rem); line-height:1.02; max-width:14ch; opacity:0; animation: fadeUp 1s ease forwards 0.4s; }
+  .hero-content .sub{ font-size:1.05rem; font-weight:300; color:var(--cream-dim); max-width:38ch; margin-top:1.6rem; line-height:1.6; opacity:0; animation: fadeUp 1s ease forwards 0.6s; }
+  .hero-cta-row{ margin-top:2.6rem; display:flex; align-items:center; gap:1.6rem; flex-wrap:wrap; opacity:0; animation: fadeUp 1s ease forwards 0.8s; }
+  .scroll-hint{ position:absolute; bottom:2.4rem; left:6vw; font-size:0.68rem; letter-spacing:0.2em; text-transform:uppercase; color:rgba(244,234,217,0.4); display:flex; align-items:center; gap:0.6rem; z-index:3; }
+  .scroll-hint::after{ content:''; width:26px; height:1px; background: rgba(244,234,217,0.4); }
+  .pin-card{
+    position:fixed; z-index:60; background: rgba(28,19,13,0.92); border: 1px solid var(--line); border-radius: 12px;
+    padding: 0.7rem 1rem; font-size: 0.82rem; color: var(--cream); pointer-events:none; opacity:0;
+    transform: translate(-50%, -120%); transition: opacity 0.18s ease; backdrop-filter: blur(6px);
+    white-space:nowrap; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+  .pin-card .flag{ font-size:1.1rem; margin-right:0.4rem; }
+  .pin-card .dish{ font-family:'Fraunces', serif; font-weight:500; }
+  .pin-card.visible{ opacity:1; }
+  @keyframes fadeUp{ from{ opacity:0; transform: translateY(16px); } to{ opacity:1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce){ .hero-content h1, .hero-eyebrow, .hero-content .sub, .hero-cta-row{ animation:none; opacity:1; } }
+  @media (max-width: 640px){ .scroll-hint{ display:none; } #scene-canvas{ opacity:0.7; } }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="index.html" class="logo">World<span>Bite</span></a>
+  <button class="menu-btn" id="menuBtn">☰</button>
+  <div class="nav-links" id="navLinks">
+    <a href="index.html" class="active">Home</a>
+    <a href="recipes.html">Recipes</a>
+    <a href="about.html">About</a>
+    <a href="https://www.youtube.com/channel/UCKPswE_dxH5hH9jCJUf0vtg" class="nav-cta" target="_blank">Watch on YouTube</a>
+  </div>
+</nav>
+
+<div class="hero-wrap">
+  <canvas id="scene-canvas"></canvas>
+  <div class="noise-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">World Recipes · Real Cooking</div>
+    <h1>Travel the world,<br><em>one bite</em> at a time.</h1>
+    <p class="sub">Real cooking. Authentic recipes. Cinematic stories from kitchens across the globe — from Georgian khachapuri to Vietnamese bánh xèo.</p>
+    <div class="hero-cta-row">
+      <a href="recipes.html" class="btn btn-primary">Explore Recipes</a>
+      <a href="https://www.youtube.com/channel/UCKPswE_dxH5hH9jCJUf0vtg" class="btn btn-outline" target="_blank">Watch on YouTube ↗</a>
+    </div>
+  </div>
+  <div class="scroll-hint">Scroll to explore</div>
+  <div class="pin-card" id="pinCard"><span class="flag"></span><span class="dish"></span></div>
+</div>
+
+<!-- Featured Recipes -->
+<section class="section">
+  <div class="section-narrow">
+    <div class="section-head">
+      <div class="eyebrow">Latest Flavors</div>
+      <h2>Fresh from the kitchen</h2>
+      <p>New dishes added every week — here's what's cooking right now.</p>
+    </div>
+    <div class="recipe-grid" id="featuredGrid"></div>
+  </div>
+</section>
+
+<!-- Browse by Country -->
+<section class="section" style="padding-top:0;">
+  <div class="section-narrow">
+    <div class="section-head">
+      <div class="eyebrow">Explore by Cuisine</div>
+      <h2>Pick a country, discover a dish</h2>
+      <p>Every recipe carries a passport stamp — browse the world by flavor.</p>
+    </div>
+    <div class="country-grid" id="countryGrid"></div>
+  </div>
+</section>
+
+<!-- Why WorldBite -->
+<section class="section" style="padding-top:0;">
+  <div class="section-narrow">
+    <div class="value-grid">
+      <div class="value-card">
+        <div class="icon">🍳</div>
+        <h3>Real Cooking</h3>
+        <p>No shortcuts, no gimmicks — just authentic techniques from real kitchens around the world.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">🌎</div>
+        <h3>Global Stories</h3>
+        <p>Every dish comes with the culture and history behind it, not just a list of steps.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">🎬</div>
+        <h3>Cinematic Quality</h3>
+        <p>Beautifully shot, satisfying to watch from the first chop to the last plate.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Newsletter -->
+<section class="section" style="padding-top:0;">
+  <div class="section-narrow">
+    <div class="newsletter">
+      <h2>Never miss a dish</h2>
+      <p>Get a new recipe in your inbox every week — no spam, just food.</p>
+      <form class="newsletter-form" onsubmit="event.preventDefault(); this.querySelector('input').value=''; alert('Thanks for subscribing!');">
+        <input type="email" placeholder="you@example.com" required>
+        <button type="submit" class="btn btn-primary">Subscribe</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="footer-col">
+    <a href="index.html" class="logo">World<span>Bite</span></a>
+    <p style="color:var(--cream-dim); font-size:0.85rem; margin-top:0.8rem; max-width:26ch;">Travel the world through food, one recipe at a time.</p>
+  </div>
+  <div class="footer-col">
+    <h4>Explore</h4>
+    <a href="index.html">Home</a>
+    <a href="recipes.html">Recipes</a>
+    <a href="about.html">About</a>
+  </div>
+  <div class="footer-col">
+    <h4>Connect</h4>
+    <a href="https://www.youtube.com/channel/UCKPswE_dxH5hH9jCJUf0vtg" target="_blank">YouTube</a>
+  </div>
+  <div class="footer-bottom">© 2026 WorldBite. Cook. Explore. Enjoy.</div>
+</footer>
+
+<script src="recipes.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  // ---- Render featured recipes ----
+  const featuredGrid = document.getElementById('featuredGrid');
+  const featured = RECIPES.slice(0, 4);
+  featuredGrid.innerHTML = featured.map(r => `
+    <a href="recipe.html?id=${r.id}" class="recipe-card">
+      <div class="recipe-thumb" data-dish="${r.title} ${r.country} food" style="background:linear-gradient(135deg, ${r.color}33, ${r.color}11);">
+        <span class="emoji-fallback">${dishEmoji(r.category)}</span>
+        <span class="flag-badge">${r.flag} ${r.country}</span>
+      </div>
+      <div class="recipe-body">
+        <div class="recipe-cat">${r.category}</div>
+        <h3>${r.title}</h3>
+        <p class="recipe-desc">${r.description}</p>
+        <div class="recipe-meta">
+          <span>⏱ ${r.cookTime}</span>
+          <span>📊 ${r.difficulty}</span>
+        </div>
+      </div>
+    </a>
+  `).join('');
+  hydrateThumbnails(featuredGrid);
+
+  function dishEmoji(cat){
+    const map = { breakfast:'🍳', lunch:'🌮', dinner:'🍛', dessert:'🍮', drinks:'🥤' };
+    return map[cat] || '🍽️';
+  }
+
+  // ---- Render country grid ----
+  const countryGrid = document.getElementById('countryGrid');
+  const countryFlags = {};
+  RECIPES.forEach(r => { countryFlags[r.country] = r.flag; });
+  countryGrid.innerHTML = COUNTRIES.slice(0, 12).map(c => `
+    <a href="recipes.html?country=${encodeURIComponent(c)}" class="country-tile">
+      <span class="flag">${countryFlags[c]}</span>
+      <span class="name">${c}</span>
+    </a>
+  `).join('');
+
+  // ---- Mobile menu ----
+  document.getElementById('menuBtn').addEventListener('click', () => {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+</script>
+<script>
+(function(){
+  const canvas = document.getElementById('scene-canvas');
+  const pinCard = document.getElementById('pinCard');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const heroWrap = document.querySelector('.hero-wrap');
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, heroWrap.clientWidth/heroWrap.clientHeight, 0.1, 100);
+  camera.position.set(0, 0, 9);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer.setSize(heroWrap.clientWidth, heroWrap.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const ambient = new THREE.AmbientLight(0x3a2418, 1.6);
+  scene.add(ambient);
+  const keyLight = new THREE.PointLight(0xe0913f, 3.2, 30);
+  keyLight.position.set(6, 5, 8);
+  scene.add(keyLight);
+  const rimLight = new THREE.PointLight(0xc1502e, 2.4, 30);
+  rimLight.position.set(-6, -3, -5);
+  scene.add(rimLight);
+
+  // ================= Center prop: a wok/pot cradling the globe =================
+  const centerGroup = new THREE.Group();
+  centerGroup.position.set(2.4, -0.6, 0);
+  scene.add(centerGroup);
+
+  // wok/pot body (torus-ish bowl using lathe)
+  const potPoints = [];
+  for(let i=0;i<=12;i++){
+    const t = i/12;
+    const y = -0.9 + t*0.9;
+    const r = 2.7 - Math.pow(1-t,1.6)*2.4;
+    potPoints.push(new THREE.Vector2(Math.max(r,0.15), y));
+  }
+  const potGeo = new THREE.LatheGeometry(potPoints, 48);
+  const potMat = new THREE.MeshStandardMaterial({ color:0x2a1a10, roughness:0.35, metalness:0.75, side:THREE.DoubleSide });
+  const pot = new THREE.Mesh(potGeo, potMat);
+  centerGroup.add(pot);
+
+  // pot rim highlight
+  const rimGeo = new THREE.TorusGeometry(2.72, 0.05, 12, 48);
+  const rimMat = new THREE.MeshStandardMaterial({ color:0xd9a44a, roughness:0.3, metalness:0.8 });
+  const rim = new THREE.Mesh(rimGeo, rimMat);
+  rim.rotation.x = Math.PI/2;
+  rim.position.y = 0;
+  centerGroup.add(rim);
+
+  // two pot handles
+  const handleGeo = new THREE.TorusGeometry(0.35, 0.07, 8, 16, Math.PI);
+  const handleMat = new THREE.MeshStandardMaterial({ color:0x1c130d, roughness:0.5, metalness:0.4 });
+  const handleL = new THREE.Mesh(handleGeo, handleMat);
+  handleL.rotation.z = Math.PI/2;
+  handleL.position.set(-2.7, -0.1, 0);
+  const handleR = handleL.clone();
+  handleR.position.set(2.7, -0.1, 0);
+  handleR.rotation.z = -Math.PI/2;
+  centerGroup.add(handleL, handleR);
+
+  // globe nestled inside the pot (the "world of flavor")
+  const globeGroup = new THREE.Group();
+  globeGroup.position.set(0, 0.35, 0);
+  centerGroup.add(globeGroup);
+
+  const globeRadius = 1.9;
+  const globeGeo = new THREE.SphereGeometry(globeRadius, 56, 56);
+  const globeMat = new THREE.MeshStandardMaterial({ color:0x2a1c12, roughness:0.55, metalness:0.15, emissive:0x1a0f08, emissiveIntensity:0.4 });
+  const globe = new THREE.Mesh(globeGeo, globeMat);
+  globeGroup.add(globe);
+
+  const wireGeo = new THREE.SphereGeometry(globeRadius*1.003, 24, 16);
+  const wireMat = new THREE.MeshBasicMaterial({ color:0xd9a44a, wireframe:true, transparent:true, opacity:0.14 });
+  globeGroup.add(new THREE.Mesh(wireGeo, wireMat));
+
+  const glowGeo = new THREE.SphereGeometry(globeRadius*1.14, 32, 32);
+  const glowMat = new THREE.MeshBasicMaterial({ color:0xe0913f, transparent:true, opacity:0.07, side:THREE.BackSide });
+  globeGroup.add(new THREE.Mesh(glowGeo, glowMat));
+
+  // country pins
+  const countries = [
+    { name:'Georgia', flag:'🇬🇪', dish:'Khachapuri', lat:42, lon:43 },
+    { name:'Vietnam', flag:'🇻🇳', dish:'Bánh Xèo', lat:16, lon:108 },
+    { name:'Mexico', flag:'🇲🇽', dish:'Al Pastor', lat:23, lon:-102 },
+    { name:'India', flag:'🇮🇳', dish:'Biryani', lat:21, lon:78 },
+    { name:'Italy', flag:'🇮🇹', dish:'Ragù', lat:43, lon:12 },
+    { name:'Japan', flag:'🇯🇵', dish:'Ramen', lat:36, lon:138 },
+  ];
+  function latLonToVec3(lat, lon, r){
+    const phi = (90-lat)*(Math.PI/180); const theta=(lon+180)*(Math.PI/180);
+    return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta), r*Math.cos(phi), r*Math.sin(phi)*Math.sin(theta));
+  }
+  const pinMeshes = [];
+  const pinGeo = new THREE.SphereGeometry(0.07, 16, 16);
+  countries.forEach(c => {
+    const pos = latLonToVec3(c.lat, c.lon, globeRadius*1.03);
+    const mat = new THREE.MeshStandardMaterial({ color:0xd9a44a, emissive:0xe0913f, emissiveIntensity:0.9 });
+    const pin = new THREE.Mesh(pinGeo, mat);
+    pin.position.copy(pos); pin.userData = c;
+    globeGroup.add(pin); pinMeshes.push(pin);
+  });
+
+  // ================= Steam particles rising from the pot =================
+  const steamGroup = new THREE.Group();
+  steamGroup.position.set(2.4, 1.3, 0.3);
+  scene.add(steamGroup);
+  const steamMat = new THREE.MeshBasicMaterial({ color:0xf4ead9, transparent:true, opacity:0.22 });
+  const steamPuffs = [];
+  for(let i=0;i<9;i++){
+    const g = new THREE.SphereGeometry(0.22 + Math.random()*0.15, 8, 8);
+    const puff = new THREE.Mesh(g, steamMat.clone());
+    puff.position.set((Math.random()-0.5)*1.2, Math.random()*2.5, (Math.random()-0.5)*0.6);
+    steamGroup.add(puff);
+    steamPuffs.push({ mesh:puff, speed: 0.3+Math.random()*0.3, startY: puff.position.y, drift: (Math.random()-0.5)*0.3 });
+  }
+
+  // ================= Floating ingredients =================
+  const floaters = new THREE.Group();
+  scene.add(floaters);
+
+  function makeChili(){
+    const g = new THREE.Group();
+    const bodyGeo = new THREE.ConeGeometry(0.12, 0.55, 12);
+    const bodyMat = new THREE.MeshStandardMaterial({ color:0xc1502e, roughness:0.4 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.rotation.z = Math.PI * 0.85;
+    g.add(body);
+    const stemGeo = new THREE.CylinderGeometry(0.02, 0.03, 0.15, 6);
+    const stemMat = new THREE.MeshStandardMaterial({ color:0x3a5a2a });
+    const stem = new THREE.Mesh(stemGeo, stemMat);
+    stem.position.set(0.24, 0.08, 0);
+    stem.rotation.z = Math.PI*0.4;
+    g.add(stem);
+    return g;
+  }
+  function makeGarlic(){
+    const g = new THREE.Group();
+    const geo = new THREE.SphereGeometry(0.28, 16, 12);
+    geo.scale(1, 1.15, 1);
+    const mat = new THREE.MeshStandardMaterial({ color:0xf4ead9, roughness:0.6 });
+    g.add(new THREE.Mesh(geo, mat));
+    const tipGeo = new THREE.ConeGeometry(0.05, 0.12, 8);
+    const tip = new THREE.Mesh(tipGeo, mat);
+    tip.position.y = 0.34;
+    g.add(tip);
+    return g;
+  }
+  function makeHerbSprig(){
+    const g = new THREE.Group();
+    const stemGeo = new THREE.CylinderGeometry(0.015, 0.02, 0.6, 6);
+    const stemMat = new THREE.MeshStandardMaterial({ color:0x4a6a35 });
+    g.add(new THREE.Mesh(stemGeo, stemMat));
+    const leafMat = new THREE.MeshStandardMaterial({ color:0x5a8a3f, roughness:0.5, side:THREE.DoubleSide });
+    for(let i=0;i<5;i++){
+      const leafGeo = new THREE.SphereGeometry(0.08, 8, 6);
+      leafGeo.scale(1,0.4,1.6);
+      const leaf = new THREE.Mesh(leafGeo, leafMat);
+      const side = i%2===0?1:-1;
+      leaf.position.set(side*0.1, -0.25+i*0.12, 0);
+      leaf.rotation.z = side*0.6;
+      g.add(leaf);
+    }
+    return g;
+  }
+  function makeLemonSlice(){
+    const g = new THREE.Group();
+    const geo = new THREE.CylinderGeometry(0.32, 0.32, 0.05, 20);
+    const mat = new THREE.MeshStandardMaterial({ color:0xe8c94a, roughness:0.4, metalness:0.1 });
+    const slice = new THREE.Mesh(geo, mat);
+    g.add(slice);
+    const rindGeo = new THREE.TorusGeometry(0.31, 0.025, 8, 20);
+    const rindMat = new THREE.MeshStandardMaterial({ color:0xd9a44a });
+    const rind = new THREE.Mesh(rindGeo, rindMat);
+    rind.rotation.x = Math.PI/2;
+    g.add(rind);
+    return g;
+  }
+
+  const chili = makeChili(); chili.position.set(-3.6, 1.8, 1.2);
+  const garlic = makeGarlic(); garlic.position.set(-4.3, -0.8, -0.8);
+  const herb = makeHerbSprig(); herb.position.set(-2.6, -2.1, 1.5);
+  const lemon = makeLemonSlice(); lemon.position.set(-3.2, 0.4, -1.5);
+  floaters.add(chili, garlic, herb, lemon);
+  const floaterDefs = [
+    { obj:chili, speed:0.5, offset:0, rotSpeed:0.3 },
+    { obj:garlic, speed:0.4, offset:2, rotSpeed:0.2 },
+    { obj:herb, speed:0.6, offset:4, rotSpeed:0.15 },
+    { obj:lemon, speed:0.45, offset:1, rotSpeed:0.4 },
+  ];
+
+  // ================= Interaction =================
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  let targetRotY = 0, targetRotX = 0;
+
+  window.addEventListener('mousemove', (e) => {
+    const nx = (e.clientX/window.innerWidth)*2-1;
+    const ny = -(e.clientY/window.innerHeight)*2+1;
+    targetRotY = nx*0.25; targetRotX = ny*0.15;
+    mouse.x = nx; mouse.y = ny;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(pinMeshes);
+    if(hits.length){
+      const c = hits[0].object.userData;
+      pinCard.querySelector('.flag').textContent = c.flag;
+      pinCard.querySelector('.dish').textContent = c.dish;
+      pinCard.style.left = e.clientX+'px'; pinCard.style.top = e.clientY+'px';
+      pinCard.classList.add('visible');
+      canvas.style.cursor = 'pointer';
+    } else {
+      pinCard.classList.remove('visible');
+      canvas.style.cursor = 'default';
+    }
+  });
+
+  window.addEventListener('scroll', () => {
+    const p = Math.min(window.scrollY / window.innerHeight, 1);
+    centerGroup.scale.setScalar(1 - p*0.25);
+    centerGroup.position.y = -0.6 - p*1.1;
+    steamGroup.position.y = 1.3 - p*1.1;
+  });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = heroWrap.clientWidth/heroWrap.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(heroWrap.clientWidth, heroWrap.clientHeight);
+  });
+
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    if(!reduceMotion){
+      globe.rotation.y = t*0.15;
+      pinMeshes.forEach(p => p.rotation.y = t*0.15);
+      globeGroup.rotation.y += (targetRotY - globeGroup.rotation.y)*0.04;
+      globeGroup.rotation.x += (targetRotX - globeGroup.rotation.x)*0.04;
+      centerGroup.rotation.y += (targetRotY*0.3 - centerGroup.rotation.y)*0.03;
+
+      steamPuffs.forEach(s => {
+        s.mesh.position.y += 0.006*s.speed;
+        s.mesh.position.x += Math.sin(t*s.speed + s.startY)*0.002;
+        s.mesh.material.opacity = Math.max(0, 0.22 - (s.mesh.position.y - s.startY)*0.08);
+        if(s.mesh.position.y - s.startY > 2.8){ s.mesh.position.y = s.startY; s.mesh.material.opacity = 0.22; }
+      });
+
+      floaterDefs.forEach(f => {
+        f.obj.position.y += Math.sin(t*f.speed + f.offset)*0.002;
+        f.obj.rotation.y = t*f.rotSpeed + f.offset;
+        f.obj.rotation.x = Math.sin(t*f.speed*0.5)*0.2;
+      });
+    }
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

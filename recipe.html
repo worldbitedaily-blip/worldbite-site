@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">Recipe — WorldBite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="index.html" class="logo">World<span>Bite</span></a>
+  <button class="menu-btn" id="menuBtn">☰</button>
+  <div class="nav-links" id="navLinks">
+    <a href="index.html">Home</a>
+    <a href="recipes.html" class="active">Recipes</a>
+    <a href="about.html">About</a>
+    <a href="https://www.youtube.com/channel/UCKPswE_dxH5hH9jCJUf0vtg" class="nav-cta" target="_blank">Watch on YouTube</a>
+  </div>
+</nav>
+
+<div id="recipeContent"></div>
+
+<section class="related-section" id="relatedSection" style="display:none;">
+  <div class="section-narrow">
+    <div class="section-head" style="margin-bottom:2rem;">
+      <div class="eyebrow">Keep Exploring</div>
+      <h2 id="relatedHeading">More from this region</h2>
+    </div>
+    <div class="recipe-grid" id="relatedGrid"></div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="footer-col">
+    <a href="index.html" class="logo">World<span>Bite</span></a>
+    <p style="color:var(--cream-dim); font-size:0.85rem; margin-top:0.8rem; max-width:26ch;">Travel the world through food, one recipe at a time.</p>
+  </div>
+  <div class="footer-col">
+    <h4>Explore</h4>
+    <a href="index.html">Home</a>
+    <a href="recipes.html">Recipes</a>
+    <a href="about.html">About</a>
+  </div>
+  <div class="footer-col">
+    <h4>Connect</h4>
+    <a href="https://www.youtube.com/channel/UCKPswE_dxH5hH9jCJUf0vtg" target="_blank">YouTube</a>
+  </div>
+  <div class="footer-bottom">© 2026 WorldBite. Cook. Explore. Enjoy.</div>
+</footer>
+
+<script src="recipes.js"></script>
+<script>
+  document.getElementById('menuBtn').addEventListener('click', () => {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+
+  function dishEmoji(cat){
+    const map = { breakfast:'🍳', lunch:'🌮', dinner:'🍛', dessert:'🍮', drinks:'🥤' };
+    return map[cat] || '🍽️';
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  const recipe = RECIPES.find(r => r.id === id);
+  const content = document.getElementById('recipeContent');
+
+  if(!recipe){
+    content.innerHTML = `
+      <div class="empty-state" style="padding:6rem 2rem;">
+        <div class="icon">🍽️</div>
+        <p>We couldn't find that recipe.</p>
+        <a href="recipes.html" class="btn btn-primary" style="margin-top:1.5rem; display:inline-block;">Browse All Recipes</a>
+      </div>
+    `;
+  } else {
+    document.title = `${recipe.title} — WorldBite`;
+
+    const videoBlock = recipe.videoId
+      ? `<iframe src="https://www.youtube.com/embed/${recipe.videoId}" title="${recipe.title}" allowfullscreen></iframe>`
+      : `<div class="video-placeholder"><div class="play-icon">▶</div><span>Video coming soon — watch more on the WorldBite YouTube channel</span></div>`;
+
+    content.innerHTML = `
+      <div class="recipe-hero">
+        <div class="breadcrumb">
+          <a href="index.html">Home</a> / <a href="recipes.html">Recipes</a> / <a href="recipes.html?category=${recipe.category}">${recipe.category}</a> / ${recipe.title}
+        </div>
+        <div class="recipe-title-row">
+          <div>
+            <h1><span class="recipe-flag">${recipe.flag}</span> ${recipe.title}</h1>
+            <p class="recipe-story">${recipe.description}</p>
+          </div>
+        </div>
+        <div class="meta-row">
+          <div class="meta-item"><span class="label">Country</span><span class="value">${recipe.flag} ${recipe.country}</span></div>
+          <div class="meta-item"><span class="label">Category</span><span class="value" style="text-transform:capitalize;">${recipe.category}</span></div>
+          <div class="meta-item"><span class="label">Cook Time</span><span class="value">${recipe.cookTime}</span></div>
+          <div class="meta-item"><span class="label">Difficulty</span><span class="value">${recipe.difficulty}</span></div>
+          <div class="meta-item"><span class="label">Servings</span><span class="value">${recipe.servings}</span></div>
+        </div>
+      </div>
+
+      <div class="video-embed">
+        <div class="video-frame${recipe.isShort ? ' vertical' : ''}">${videoBlock}</div>
+      </div>
+
+      <div class="recipe-content">
+        <div class="ingredients-box">
+          <h3>Ingredients</h3>
+          <ul>
+            ${recipe.ingredients.map(i => `<li>${i}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="steps-list">
+          <h3>Method</h3>
+          ${recipe.steps.map((s, idx) => `
+            <div class="step-item">
+              <div class="step-num">${idx+1}</div>
+              <div class="step-text">${s}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    // Related recipes: same country first, then same category
+    let related = RECIPES.filter(r => r.id !== recipe.id && r.country === recipe.country);
+    if(related.length < 4){
+      const more = RECIPES.filter(r => r.id !== recipe.id && r.category === recipe.category && !related.includes(r));
+      related = related.concat(more);
+    }
+    related = related.slice(0, 4);
+
+    if(related.length){
+      document.getElementById('relatedSection').style.display = 'block';
+      document.getElementById('relatedHeading').textContent = `More ${recipe.category} & ${recipe.country} dishes`;
+      document.getElementById('relatedGrid').innerHTML = related.map(r => `
+        <a href="recipe.html?id=${r.id}" class="recipe-card">
+          <div class="recipe-thumb" data-dish="${r.title} ${r.country} food" style="background:linear-gradient(135deg, ${r.color}33, ${r.color}11);">
+            <span class="emoji-fallback">${dishEmoji(r.category)}</span>
+            <span class="flag-badge">${r.flag} ${r.country}</span>
+          </div>
+          <div class="recipe-body">
+            <div class="recipe-cat">${r.category}</div>
+            <h3>${r.title}</h3>
+            <p class="recipe-desc">${r.description}</p>
+            <div class="recipe-meta">
+              <span>⏱ ${r.cookTime}</span>
+              <span>📊 ${r.difficulty}</span>
+            </div>
+          </div>
+        </a>
+      `).join('');
+      hydrateThumbnails(document.getElementById('relatedGrid'));
+    }
+  }
+</script>
+</body>
+</html>

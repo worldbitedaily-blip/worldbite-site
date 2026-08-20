@@ -1,9 +1,9 @@
 // ============================================================
-// WorldBite Cooking Assistant — powered by Google Gemini (free tier)
+// WorldBite Cooking Assistant — powered by Groq (free, fast inference)
 // ============================================================
-// SETUP: paste your free API key below (get one at aistudio.google.com)
-const GEMINI_API_KEY = "AQ.Ab8RN6IZf77sxPv4WKcQ9rxvNadaeXpHFI9KtmbQRAzpLjM0bw";
-const GEMINI_MODEL = "gemini-2.5-flash-lite"; // best free-tier limits: 15 RPM / 1000 req per day
+// SETUP: paste your free Groq API key below (get one at console.groq.com/keys)
+const GROQ_API_KEY = "PASTE_YOUR_FREE_GROQ_API_KEY_HERE";
+const GROQ_MODEL = "llama-3.3-70b-versatile"; // free tier, strong quality/speed balance
 // ============================================================
 
 (function(){
@@ -127,8 +127,8 @@ const GEMINI_MODEL = "gemini-2.5-flash-lite"; // best free-tier limits: 15 RPM /
     const text = inputEl.value.trim();
     if(!text) return;
 
-    if(!GEMINI_API_KEY || GEMINI_API_KEY.indexOf('PASTE_YOUR') === 0){
-      addMessage("The site owner hasn't added a free Gemini API key yet — add one in chatbot.js to activate me!", 'bot');
+    if(!GROQ_API_KEY || GROQ_API_KEY.indexOf('PASTE_YOUR') === 0){
+      addMessage("The site owner hasn't added a free Groq API key yet — add one in chatbot.js to activate me!", 'bot');
       return;
     }
 
@@ -137,18 +137,22 @@ const GEMINI_MODEL = "gemini-2.5-flash-lite"; // best free-tier limits: 15 RPM /
     sendBtn.disabled = true;
     const typingEl = addMessage('Thinking...', 'bot typing');
 
-    history.push({ role: 'user', parts: [{ text }] });
+    history.push({ role: 'user', content: text });
 
     try {
       const systemPrompt = `You are the WorldBite Chef, a warm, encouraging AI cooking assistant embedded on the WorldBite recipe website. Help users with cooking questions: ingredient substitutions, techniques, timing, troubleshooting a dish, or recommending a recipe. Keep answers concise (2-5 sentences) and friendly. When relevant, you may suggest a dish from this site's recipe collection: ${recipeContext()}. If asked something unrelated to cooking/food, gently redirect to cooking topics.`;
 
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_API_KEY}`
+        },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: history,
-          generationConfig: { maxOutputTokens: 300, temperature: 0.7 }
+          model: GROQ_MODEL,
+          messages: [{ role: 'system', content: systemPrompt }, ...history],
+          max_tokens: 300,
+          temperature: 0.7
         })
       });
 
@@ -160,12 +164,12 @@ const GEMINI_MODEL = "gemini-2.5-flash-lite"; // best free-tier limits: 15 RPM /
         return;
       }
 
-      const reply = data.candidates && data.candidates[0] && data.candidates[0].content
-        ? data.candidates[0].content.parts.map(p => p.text).join('')
+      const reply = data.choices && data.choices[0] && data.choices[0].message
+        ? data.choices[0].message.content
         : "Sorry, I couldn't come up with an answer just now — try again?";
 
       addMessage(reply, 'bot');
-      history.push({ role: 'model', parts: [{ text: reply }] });
+      history.push({ role: 'assistant', content: reply });
 
       // keep history from growing unbounded
       if(history.length > 20) history = history.slice(-20);

@@ -6,7 +6,8 @@ const GROQ_API_KEY = "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";
 const GROQ_MODEL = "llama-3.3-70b-versatile"; // free tier, strong quality/speed balance
 // ============================================================
 
-(function(){
+(
+function(){
   // ---------- Inject styles ----------
   const style = document.createElement('style');
   style.textContent = `
@@ -64,13 +65,13 @@ const GROQ_MODEL = "llama-3.3-70b-versatile"; // free tier, strong quality/speed
     }
   `;
   document.head.appendChild(style);
-
+ 
   // ---------- Inject markup ----------
   const bubble = document.createElement('button');
   bubble.className = 'wb-chat-bubble';
   bubble.innerHTML = '🍳';
   bubble.setAttribute('aria-label', 'Open cooking assistant');
-
+ 
   const panel = document.createElement('div');
   panel.className = 'wb-chat-panel';
   panel.innerHTML = `
@@ -87,18 +88,18 @@ const GROQ_MODEL = "llama-3.3-70b-versatile"; // free tier, strong quality/speed
       <button id="wbSend" aria-label="Send">➤</button>
     </div>
   `;
-
+ 
   document.body.appendChild(bubble);
   document.body.appendChild(panel);
-
+ 
   const messagesEl = panel.querySelector('#wbMessages');
   const inputEl = panel.querySelector('#wbInput');
   const sendBtn = panel.querySelector('#wbSend');
   const closeBtn = panel.querySelector('.wb-chat-close');
-
+ 
   let opened = false;
   let history = [];
-
+ 
   function addMessage(text, sender){
     const div = document.createElement('div');
     div.className = `wb-msg ${sender}`;
@@ -107,7 +108,7 @@ const GROQ_MODEL = "llama-3.3-70b-versatile"; // free tier, strong quality/speed
     messagesEl.scrollTop = messagesEl.scrollHeight;
     return div;
   }
-
+ 
   bubble.addEventListener('click', () => {
     opened = !opened;
     panel.classList.toggle('open', opened);
@@ -116,32 +117,32 @@ const GROQ_MODEL = "llama-3.3-70b-versatile"; // free tier, strong quality/speed
     }
   });
   closeBtn.addEventListener('click', () => { opened = false; panel.classList.remove('open'); });
-
+ 
   // Build a compact recipe list for context (title + country + category only, to keep prompt small)
   function recipeContext(){
     if(typeof RECIPES === 'undefined') return '';
     return RECIPES.map(r => `${r.title} (${r.country}, ${r.category})`).join(', ');
   }
-
+ 
   async function sendMessage(){
     const text = inputEl.value.trim();
     if(!text) return;
-
+ 
     if(!GROQ_API_KEY || GROQ_API_KEY.indexOf('PASTE_YOUR') === 0){
       addMessage("The site owner hasn't added a free Groq API key yet — add one in chatbot.js to activate me!", 'bot');
       return;
     }
-
+ 
     addMessage(text, 'user');
     inputEl.value = '';
     sendBtn.disabled = true;
     const typingEl = addMessage('Thinking...', 'bot typing');
-
+ 
     history.push({ role: 'user', content: text });
-
+ 
     try {
       const systemPrompt = `You are the WorldBite Chef, a warm, encouraging AI cooking assistant embedded on the WorldBite recipe website. Help users with cooking questions: ingredient substitutions, techniques, timing, troubleshooting a dish, or recommending a recipe. Keep answers concise (2-5 sentences) and friendly. When relevant, you may suggest a dish from this site's recipe collection: ${recipeContext()}. If asked something unrelated to cooking/food, gently redirect to cooking topics.`;
-
+ 
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -155,25 +156,25 @@ const GROQ_MODEL = "llama-3.3-70b-versatile"; // free tier, strong quality/speed
           temperature: 0.7
         })
       });
-
+ 
       const data = await res.json();
       typingEl.remove();
-
+ 
       if(data.error){
         addMessage(`Error: ${data.error.message || 'something went wrong'}`, 'bot');
         return;
       }
-
+ 
       const reply = data.choices && data.choices[0] && data.choices[0].message
         ? data.choices[0].message.content
         : "Sorry, I couldn't come up with an answer just now — try again?";
-
+ 
       addMessage(reply, 'bot');
       history.push({ role: 'assistant', content: reply });
-
+ 
       // keep history from growing unbounded
       if(history.length > 20) history = history.slice(-20);
-
+ 
     } catch(err){
       typingEl.remove();
       addMessage("Couldn't reach the kitchen (network error) — try again in a moment.", 'bot');
@@ -181,7 +182,8 @@ const GROQ_MODEL = "llama-3.3-70b-versatile"; // free tier, strong quality/speed
       sendBtn.disabled = false;
     }
   }
-
+ 
   sendBtn.addEventListener('click', sendMessage);
   inputEl.addEventListener('keydown', (e) => { if(e.key === 'Enter') sendMessage(); });
 })();
+ 

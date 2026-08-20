@@ -2,7 +2,7 @@
 // WorldBite Cooking Assistant — powered by Google Gemini (free tier)
 // ============================================================
 // SETUP: paste your free API key below (get one at aistudio.google.com)
-const GEMINI_API_KEY = "PASTE_YOUR_FREE_GEMINI_API_KEY_HERE";
+const GEMINI_API_KEY = "AQ.Ab8RN6IZf77sxPv4WKcQ9rxvNadaeXpHFI9KtmbQRAzpLjM0bw";
 const GEMINI_MODEL = "gemini-2.5-flash-lite"; // best free-tier limits: 15 RPM / 1000 req per day
 // ============================================================
 

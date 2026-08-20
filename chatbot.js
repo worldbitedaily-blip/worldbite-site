@@ -3,7 +3,7 @@
 // ============================================================
 // SETUP: paste your free Groq API key below (get one at console.groq.com/keys)
 const GROQ_API_KEY = "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";
-const GROQ_MODEL = "llama-3.3-70b-versatile"; // free tier, strong quality/speed balance
+const GROQ_MODEL = "openai/gpt-oss-120b"; // free tier, strong quality/speed balance
 // ============================================================
 
 (

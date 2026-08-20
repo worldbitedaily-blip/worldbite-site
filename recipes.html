@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>All Recipes — WorldBite</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:title" content="All Recipes — WorldBite">
+<meta property="og:description" content="Search authentic recipes from every corner of the globe, by cuisine or meal.">
+<meta property="og:image" content="https://worldbitedaily-blip.github.io/worldbite-site/og-image.png">
+<meta property="og:url" content="https://worldbitedaily-blip.github.io/worldbite-site/recipes.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://worldbitedaily-blip.github.io/worldbite-site/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -11,7 +21,7 @@
 <body>
 
 <nav class="site-nav">
-  <a href="index.html" class="logo">World<span>Bite</span></a>
+  <a href="index.html" class="logo"><img src="favicon-32.png" alt="WorldBite logo">World<span>Bite</span></a>
   <button class="menu-btn" id="menuBtn">☰</button>
   <div class="nav-links" id="navLinks">
     <a href="index.html">Home</a>
@@ -55,7 +65,7 @@
 
 <footer class="site-footer">
   <div class="footer-col">
-    <a href="index.html" class="logo">World<span>Bite</span></a>
+    <a href="index.html" class="logo"><img src="favicon-32.png" alt="WorldBite logo">World<span>Bite</span></a>
     <p style="color:var(--cream-dim); font-size:0.85rem; margin-top:0.8rem; max-width:26ch;">Travel the world through food, one recipe at a time.</p>
   </div>
   <div class="footer-col">
@@ -72,6 +82,7 @@
 </footer>
 
 <script src="recipes.js"></script>
+<script src="chatbot.js"></script>
 <script>
   document.getElementById('menuBtn').addEventListener('click', () => {
     document.getElementById('navLinks').classList.toggle('open');

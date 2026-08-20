@@ -38,7 +38,9 @@ em{font-style:italic; font-weight:300; color:var(--amber);}
   font-size:1.3rem;
   font-weight:600;
   letter-spacing:0.01em;
+  display:flex; align-items:center; gap:0.55rem;
 }
+.logo img{ width:34px; height:34px; border-radius:50%; }
 .logo span{ color:var(--amber); }
 .nav-links{ display:flex; align-items:center; gap:2.2rem; font-size:0.88rem; }
 .nav-links a{ color:var(--cream-dim); transition:color 0.2s; position:relative; }
